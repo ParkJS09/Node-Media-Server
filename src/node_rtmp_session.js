@@ -216,7 +216,7 @@ class NodeRtmpSession {
         this.pingInterval = null;
       }
 
-      Logger.log(`[rtmp disconnect] id=${this.id}`);
+      Logger.log(`[${this.TAG} disconnect] id=${this.id}`);
       
       context.nodeEvent.emit('doneConnect', this.id, this.connectCmdObj);
 
@@ -1130,8 +1130,8 @@ class NodeRtmpSession {
     }
 
     if (context.publishers.has(this.publishStreamPath)) {
-      this.reject();
       Logger.log(`[rtmp publish] Already has a stream. id=${this.id} streamPath=${this.publishStreamPath} streamId=${this.publishStreamId}`);
+      this.reject();
       this.sendStatusMessage(this.publishStreamId, 'error', 'NetStream.Publish.BadName', 'Stream already publishing');
     } else if (this.isPublishing) {
       Logger.log(`[rtmp publish] NetConnection is publishing. id=${this.id} streamPath=${this.publishStreamPath} streamId=${this.publishStreamId}`);

@@ -108,6 +108,72 @@ URL : rtmp://localhost/live
 
 Stream key : STREAM_NAME?sign=expires-HashValue (sign parameter required only if publish auth is enabled)
 
+## From SRT
+SRT (MPEG-TS over SRT) is received natively through a libsrt N-API addon, without an ffmpeg relay.
+The TS stream is demuxed into FLV tags and published like an RTMP stream, so it can be played over
+RTMP, http-flv, websocket-flv and HLS/DASH (trans) right away.
+Supported codecs: H.264, H.265 and AAC (ADTS).
+
+### Build the addon
+Requires cmake, a C++17 compiler and the [libsrt](https://github.com/Haivision/srt) source.
+```bash
+git clone https://github.com/Haivision/srt ~/GithubProject/srt
+npm run build:srt
+```
+`npm run build:srt` builds a static libsrt into `native/srt/deps/libsrt`, then the addon with node-gyp.
+The resulting `native/srt/build/Release/srt_addon.node` links libsrt and libcrypto statically and depends only on system libraries.
+
+| Variable | Default | |
+|---|---|---|
+| `SRT_SRC` | `~/GithubProject/srt` | libsrt source tree |
+| `OPENSSL_ROOT_DIR` | macOS: OpenSSL built from source into `native/srt/deps/openssl`<br>Linux: `/usr` | prefix containing a static `libcrypto.a` |
+
+### Config
+```js
+const config = {
+  rtmp: { port: 1935, chunk_size: 60000, gop_cache: true, ping: 30, ping_timeout: 60 },
+  http: { port: 8000, allow_origin: '*' },
+  srt: {
+    port: 9000,            // UDP port, default 9000
+    host: '0.0.0.0',       // optional
+    app: 'live',           // app used when the streamid has none, default 'live'
+    latency: 120,          // optional, ms
+    passphrase: '0123456789abcdef', // optional, 10..79 chars; clients must use the same one
+    pbkeylen: 16,          // optional, 16 / 24 / 32
+    rcvbuf: 12058624       // optional, bytes
+  }
+};
+```
+
+### streamid
+Only publishing (caller mode) is supported. The stream path comes from the SRT `streamid`:
+```
+#!::r=live/STREAM_NAME,m=publish            SRT access control syntax, m=publish is required
+#!::r=STREAM_NAME,m=publish                 app defaults to srt.app
+#!::r=live/STREAM_NAME,m=publish,u=user     other keys are passed as publish args
+live/STREAM_NAME?sign=expires-HashValue     plain path with query args
+```
+Connections with `m` other than `publish`, without a stream name, or for a path that is already publishing are rejected.
+Publish auth (`auth.publish`) works the same as RTMP through the `sign` argument.
+
+```bash
+# ffmpeg built with libsrt
+ffmpeg -re -i INPUT_FILE_NAME -c:v libx264 -c:a aac -f mpegts "srt://localhost:9000?streamid=#!::r=live/STREAM_NAME,m=publish"
+# or relay an MPEG-TS/UDP stream with srt-live-transmit
+srt-live-transmit udp://:15000 "srt://localhost:9000?streamid=#!::r=live/STREAM_NAME,m=publish"
+```
+OBS: Settings -> Stream -> Custom, Server `srt://localhost:9000?streamid=#!::r=live/STREAM_NAME,m=publish`, empty stream key.
+
+### Playback
+```
+rtmp://localhost/live/STREAM_NAME
+http://localhost:8000/live/STREAM_NAME.flv
+ws://localhost:8000/live/STREAM_NAME.flv
+http://localhost:8000/live/STREAM_NAME/index.m3u8   (with trans/hls enabled)
+```
+`/api/streams` reports `protocol: "srt"` and SRT statistics (`srt`: RTT, receive rate, loss/drop/retransmit counters) for SRT publishers,
+and `/api/server` counts SRT clients in `clients.srt`.
+
 # Accessing the live stream
 ## RTMP 
 ```

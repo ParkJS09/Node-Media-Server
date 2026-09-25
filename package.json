@@ -6,7 +6,8 @@
   "main": "src/node_media_server.js",
   "scripts": {
     "start": "node bin/app.js",
-    "test": "node test/test_run.js"
+    "test": "node test/test_run.js",
+    "build:srt": "cd native/srt && ./scripts/build-libsrt.sh && npx node-gyp rebuild"
   },
   "repository": {
     "type": "git",

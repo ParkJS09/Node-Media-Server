@@ -54,16 +54,18 @@ function getSessionsInfo(sessions) {
     rtmp: 0,
     http: 0,
     ws: 0,
+    srt: 0,
   };
 
   for (let session of sessions.values()) {
     if (session.TAG === 'relay') continue;
-    let socket = session.TAG === 'rtmp' ? session.socket : session.req.socket;
+    let socket = session.TAG === 'rtmp' || session.TAG === 'srt' ? session.socket : session.req.socket;
     info.inbytes += socket.bytesRead;
     info.outbytes += socket.bytesWritten;
     info.rtmp += session.TAG === 'rtmp' ? 1 : 0;
     info.http += session.TAG === 'http-flv' ? 1 : 0;
     info.ws += session.TAG === 'websocket-flv' ? 1 : 0;
+    info.srt += session.TAG === 'srt' ? 1 : 0;
   }
 
   return info;
@@ -105,7 +107,8 @@ function getInfo(req, res, next) {
         idle: this.idlePlayers.size,
         rtmp: sinfo.rtmp,
         http: sinfo.http,
-        ws: sinfo.ws
+        ws: sinfo.ws,
+        srt: sinfo.srt
       },
       version: Package.version
     };

@@ -11,6 +11,7 @@ const NodeHttpServer = require('./node_http_server');
 const NodeTransServer = require('./node_trans_server');
 const NodeRelayServer = require('./node_relay_server');
 const NodeFissionServer = require('./node_fission_server');
+const NodeSrtServer = require('./node_srt_server');
 const context = require('./node_core_ctx');
 const Package = require('../package.json');
 
@@ -30,6 +31,11 @@ class NodeMediaServer {
     if (this.config.http) {
       this.nhs = new NodeHttpServer(this.config);
       this.nhs.run();
+    }
+
+    if (this.config.srt) {
+      this.nss = new NodeSrtServer(this.config);
+      this.nss.run();
     }
 
     if (this.config.trans) {
@@ -79,6 +85,9 @@ class NodeMediaServer {
     }
     if (this.nhs) {
       this.nhs.stop();
+    }
+    if (this.nss) {
+      this.nss.stop();
     }
     if (this.nls) {
       this.nls.stop();

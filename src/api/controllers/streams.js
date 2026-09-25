@@ -55,6 +55,8 @@ function getStreams(req, res, next) {
           connectCreated: session.connectTime,
           bytes: session.socket.bytesRead,
           ip: session.socket.remoteAddress,
+          protocol: session.TAG,
+          srt: session.TAG === 'srt' ? session.srtStats : undefined,
           audio: session.audioCodec > 0 ? {
             codec: session.audioCodecName,
             profile: session.audioProfileName,

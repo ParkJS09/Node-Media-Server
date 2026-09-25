@@ -1,0 +1,13 @@
+{
+  "name": "node-media-server-srt",
+  "version": "1.0.0",
+  "private": true,
+  "description": "libsrt N-API listener for Node-Media-Server SRT ingest",
+  "main": "index.js",
+  "gypfile": true,
+  "scripts": {
+    "build:libsrt": "scripts/build-libsrt.sh",
+    "build": "scripts/build-libsrt.sh && npx node-gyp rebuild"
+  },
+  "license": "MIT"
+}
